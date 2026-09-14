@@ -1,6 +1,7 @@
 {
-  "name": "pixel Action RPG",
+  "name": "Pixel Action RPG",
   "short_name": "PixelRPG",
+  "description": "An action-packed pixel RPG game built with HTML5 and JavaScript.",
   "start_url": "index.html",
   "display": "fullscreen",
   "orientation": "landscape",
