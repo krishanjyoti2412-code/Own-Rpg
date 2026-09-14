@@ -1,0 +1,10 @@
+{
+  "name": "pixel Action RPG",
+  "short_name": "PixelRPG",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#15121f",
+  "icons": []
+}
