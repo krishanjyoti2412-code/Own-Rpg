@@ -106,8 +106,8 @@
         // ==========================================
         // --- ASSETS & IMAGE LOADING ---
         // ==========================================
-        const bgImg = new Image();
-        bgImg.src = "Old-dark-Castle-tileset-Files/PNG/preview-old-dark-castle-interior-tileset.png";
+           const bgImg = new Image();
+        bgImg.src = "preview-old-dark-castle-interior-tileset.png";
 
         const playerAssets = {
             idle: new Image(),
@@ -116,18 +116,17 @@
             attack: new Image()
         };
 
-        playerAssets.idle.src = "Spritesheets player/idle.png";
-        playerAssets.run.src = "Spritesheets player/run.png";
-        playerAssets.jump.src = "Spritesheets player/jump.png";
-        playerAssets.attack.src = "Spritesheets player/attack.png"; 
+        playerAssets.idle.src = "idle.png";
+        playerAssets.run.src = "run.png";
+        playerAssets.jump.src = "jump.png";
+        playerAssets.attack.src = "attack.png"; 
       
-        // Separate Ogre Spritesheets
+        // Ogre Spritesheets
         const enemyWalkImg = new Image();
-        enemyWalkImg.src = "Spritesheets/ogre-walk.png";
+        enemyWalkImg.src = "ogre-walk.png";
 
         const enemyAttackImg = new Image();
-        enemyAttackImg.src = "Spritesheets/ogre-attack.png";
-
+        enemyAttackImg.src = "ogre-attack.png";
         // ==========================================
         // --- LEVEL DESIGN & PLATFORMS ---
         // ==========================================
