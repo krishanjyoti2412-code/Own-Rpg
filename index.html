@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#15121f">
+    <title>Pixel Action RPG</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: sans-serif;
+            overflow: hidden;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            touch-action: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            display: block;
+            background: #15121f;
+        }
+        #startOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #startOverlay h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #startBtn {
+            padding: 16px 32px;
+            font-size: 18px;
+            background: rgba(80, 30, 130, 0.9);
+            color: white;
+            border: 2px solid #b19cd9;
+            border-radius: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+
+        /* --- PROFESSIONAL RPG TOP-LEFT HUD --- */
+        #topLeftHud {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(20, 15, 30, 0.85);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(177, 156, 217, 0.3);
+            backdrop-filter: blur(6px);
+            z-index: 10;
+        }
+        #playerAvatar {
+            width: 36px;
+            height: 36px;
+            background: #3a2558;
+            border: 2px solid #b19cd9;
+            border-radius: 6px;
+            background-image: url('Wizard Pack/Idle.png');
+            background-size: 600% 100%;
+            background-position: 0 0;
+        }
+        .barColumn {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .rpgBarContainer {
+            position: relative;
+            width: 120px;
+            height: 15px;
+            background: #111;
+            border: 1px solid #443366;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .rpgBarFill {
+            height: 100%;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        #hpFill { background: linear-gradient(90deg, #b31414, #e74c3c); }
+        .rpgBarText {
+            position: absolute;
+            inset: 0;
+            font-size: 10px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- TOP-RIGHT HUD (CURRENCY & MENU) --- */
+        #topRightHud {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+        }
+        .currencyBadge {
+            background: rgba(20, 15, 30, 0.85);
+            border: 1px solid rgba(177, 156, 217, 0.3);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hudIconBtn {
+            width: 36px;
+            height: 36px;
+            background: rgba(80, 30, 130, 0.7);
+            border: 1px solid #b19cd9;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        /* --- INVENTORY MODAL --- */
+        #inventoryModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(6px);
+        }
+        .inv-window {
+            background: #0d0a14;
+            border: 2px solid #3b2859;
+            border-radius: 12px;
+            width: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        .inv-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #141021;
+            border-bottom: 2px solid #2a1f42;
+            padding: 8px 16px;
+            gap: 24px;
+        }
+        .inv-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #ff5555;
+            letter-spacing: 0.5px;
+        }
+        .inv-currencies {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            align-items: center;
+        }
+        .currency-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .inv-body {
+            display: flex;
+            flex: 1;
+            padding: 12px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .inventory-grid-section {
+            background: #120e1c;
+            border: 1px solid #2a1f42;
+            border-radius: 8px;
+            padding: 6px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 4px;
+        }
+        .inventory-slot {
+            width: 32px;
+            height: 32px;
+            background: #181326;
+            border: 1px solid #3b2859;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .inventory-slot:hover {
+            border-color: #b19cd9;
+            background: rgba(108, 91, 150, 0.2);
+        }
+        .close-inv-x {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .close-inv-x:hover { color: #fff; }
+
+        /* --- TOUCH CONTROLS --- */
+        .controls {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .left-controls {
+            display: flex;
+            gap: 12px;
+            pointer-events: auto;
+            align-items: flex-end;
+        }
+        .ctrl-btn-dir {
+            width: 65px;
+            height: 65px;
+            background: rgba(80, 30, 130, 0.6);
+            border: 2px solid #b19cd9;
+            border-radius: 16px;
+            color: white;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        .ctrl-btn-dir:active {
+            background: rgba(130, 60, 200, 0.85);
+            transform: scale(0.95);
+        }
+
+        .right-controls {
+            position: relative;
+            width: 220px;
+            height: 130px;
+            pointer-events: auto;
+        }
+        .skill-btn {
+            position: absolute;
+            background: rgba(60, 20, 100, 0.75);
+            border: 2px solid #b19cd9;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .skill-btn:active {
+            transform: scale(0.93);
+            background: rgba(110, 40, 170, 0.9);
+        }
+        
+        #attackBtn {
+            width: 68px;
+            height: 68px;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(160, 35, 35, 0.75);
+            border-color: #ff7676;
+            font-size: 28px;
+        }
+        #jumpBtn {
+            width: 58px;
+            height: 58px;
+            bottom: 65px;
+            right: 55px;
+            background: rgba(30, 130, 80, 0.75);
+            border-color: #76ff76;
+            font-size: 22px;
+        }
+        #fireBtn {
+            width: 50px;
+            height: 50px;
+            bottom: 65px;
+            right: 125px;
+            background: rgba(210, 80, 20, 0.75);
+            border-color: #ff9966;
+            font-size: 22px;
+        }
+        #iceBtn {
+            width: 50px;
+            height: 50px;
+            bottom: 5px;
+            right: 82px;
+            background: rgba(20, 140, 210, 0.75);
+            border-color: #66ccff;
+            font-size: 22px;
+        }
+
+        #debugConsole {
+            position: absolute;
+            top: 70px;
+            left: 12px;
+            font-family: monospace;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #00ffcc;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #00ffcc;
+            z-index: 10;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.3);
+        }
+   </style>
+</head>
+<body>
+
+    <div id="startOverlay">
+        <h1>Pixel Action RPG</h1>
+        <button id="startBtn">Tap to Play</button>
+    </div>
+
+    <div id="topLeftHud">
+        <div id="playerAvatar"></div>
+        <div class="barColumn">
+            <div class="rpgBarContainer">
+                <div id="hpFill" class="rpgBarFill"></div>
+                <div class="rpgBarText"><span id="hp">100</span> / 100</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="topRightHud">
+        <div class="currencyBadge">🪙 <span id="money">0</span></div>
+        <div class="hudIconBtn" id="bagBtn">👜</div>
+        <div class="hudIconBtn" id="pauseBtn">||</div>
+    </div>
+
+    <div id="inventoryModal" style="display: none;">
+        <div class="inv-window">
+            <div class="inv-top-bar">
+                <div class="inv-title">INVENTORY</div>
+                <div class="inv-currencies">
+                    <div class="currency-item">🪙 <span id="invMoney">0</span></div>
+                    <button class="close-inv-x" id="closeInventoryBtn">✕</button>
+                </div>
+            </div>
+            <div class="inv-body">
+                <div class="inventory-grid-section" id="inventoryGrid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="debugConsole">
+        X: 0 | Y: 0<br>
+        Grounded: false | State: idle<br>
+        Enemies: 0
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="controls">
+        <div class="left-controls">
+            <button class="ctrl-btn-dir" id="leftBtn">←</button>
+            <button class="ctrl-btn-dir" id="rightBtn">→</button>
+        </div>
+        <div class="right-controls">
+            <button class="skill-btn" id="fireBtn">🔥</button>
+            <button class="skill-btn" id="iceBtn">❄️</button>
+            <button class="skill-btn" id="jumpBtn">↑</button>
+            <button class="skill-btn" id="attackBtn">⚔️</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // --- SOUND MANAGER ---
+        // ==========================================
+        const SoundManager = {
+            ctx: null,
+            buffers: {},
+
+            audioFiles: {
+                fire: '04_Fire_explosion_04_medium.wav',
+                ice: '13_Ice_explosion_01.wav',
+                step: '03_Step_grass_03.wav',
+                jump: '30_Jump_03.wav',
+                attack: '56_Attack_03.wav',
+                hit: '61_Hit_03.wav'
+            },
+
+            async init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    await this.ctx.resume();
+                }
+
+                for (const [key, url] of Object.entries(this.audioFiles)) {
+                    if (!this.buffers[key]) {
+                        await this.loadSample(key, url);
+                    }
+                }
+            },
+
+            async loadSample(key, url) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Status: ${response.status}`);
+                    const arrayBuffer = await response.arrayBuffer();
+                    this.buffers[key] = await this.ctx.decodeAudioData(arrayBuffer);
+                } catch (err) {
+                    console.warn(`Could not load audio [${key}] from ${url}`, err);
+                }
+            },
+
+            playSound(key) {
+                if (!this.ctx || !this.buffers[key]) return;
+                const source = this.ctx.createBufferSource();
+                source.buffer = this.buffers[key];
+                source.connect(this.ctx.destination);
+                source.start(0);
+            },
+
+            playFire() { this.playSound('fire'); },
+            playIce() { this.playSound('ice'); },
+            playStep() { this.playSound('step'); },
+            playJump() { this.playSound('jump'); },
+            playAttack() { this.playSound('attack'); },
+            playHit() { this.playSound('hit'); }
+        };
+
+        document.getElementById("startOverlay").addEventListener("click", () => {
+            SoundManager.init();
+            const element = document.documentElement;
+
+            if (element.requestFullscreen) {
+                element.requestFullscreen().then(() => {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock("landscape").catch(() => {});
+                    }
+                }).catch(() => {});
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen();
+            }
+
+            document.getElementById("startOverlay").style.display = "none";
+        });
+
+        const inventoryGrid = document.getElementById("inventoryGrid");
+        const inventoryModal = document.getElementById("inventoryModal");
+        const bagBtn = document.getElementById("bagBtn");
+        const closeInventoryBtn = document.getElementById("closeInventoryBtn");
+        let isInventoryOpen = false;
+
+        for (let i = 0; i < 35; i++) {
+            const slot = document.createElement("div");
+            slot.className = "inventory-slot";
+            slot.dataset.index = i;
+            inventoryGrid.appendChild(slot);
+        }
+
+        bagBtn.addEventListener("click", () => {
+            inventoryModal.style.display = "flex";
+            isInventoryOpen = true;
+        });
+
+        closeInventoryBtn.addEventListener("click", () => {
+            inventoryModal.style.display = "none";
+            isInventoryOpen = false;
+        });
+
+        inventoryModal.addEventListener("click", (e) => {
+            if (e.target === inventoryModal) {
+                inventoryModal.style.display = "none";
+                isInventoryOpen = false;
+            }
+        });
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = 800;
+        canvas.height = 450;
+
+        // ==========================================
+        // --- WORLD & CAMERA ---
+        // ==========================================
+        const WORLD_WIDTH = 2400;
+        const WORLD_HEIGHT = 450;
+
+        const camera = {
+            x: 0,
+            y: 0,
+            zoom: 1.3,
+            smoothing: 0.08
+        };
+
+        let money = 0;
+        let hp = 100;
+        let maxHp = 100;
+        let isGameOver = false;
+        let hitCooldown = 0;
+        let stepTimer = 0;
+
+        let floatingTexts = [];
+        let droppedCoins = []; 
+        let projectiles = [];
+        const debugEl = document.getElementById("debugConsole");
+
+        function updateUI() {
+            document.getElementById("hp").innerText = hp;
+            document.getElementById("money").innerText = money;
+            document.getElementById("invMoney").innerText = money;
+            document.getElementById("hpFill").style.width = Math.max(0, (hp / maxHp) * 100) + "%";
+       }
+
+        // ==========================================
+        // --- ASSETS & IMAGE LOADING ---
+        // ==========================================
+        const bgImg = new Image();
+        bgImg.src = "platform.png";
+
+        const coinImg = new Image();
+        coinImg.src = "pixel-coin.png"; 
+        const COIN_TOTAL_FRAMES = 6; 
+
+        // Magic Spritesheets
+        const fireSpellImg = new Image();
+        fireSpellImg.src = "flame/fire.png";
+        const FIRE_SPELL_FRAMES = 5; // Adjust frame count if your fire spritesheet has more/fewer frames
+
+        const iceSpellImg = new Image();
+        iceSpellImg.src = "ice spell/ice.png";
+        const ICE_SPELL_FRAMES = 4;
+
+        const playerAssets = {
+            idle: new Image(),
+            run: new Image(),
+            jump: new Image(),
+            fall: new Image(),
+            attack1: new Image(),
+            attack2: new Image(),
+            hit: new Image(),
+            death: new Image()
+        };
+
+        playerAssets.idle.src = "Wizard Pack/Idle.png";
+        playerAssets.run.src = "Wizard Pack/Run.png";
+        playerAssets.jump.src = "Wizard Pack/Jump.png";
+        playerAssets.fall.src = "Wizard Pack/Fall.png";
+        playerAssets.attack1.src = "Wizard Pack/Attack1.png"; 
+        playerAssets.attack2.src = "Wizard Pack/Attack2.png";
+        playerAssets.hit.src = "Wizard Pack/Hit.png";
+        playerAssets.death.src = "Wizard Pack/Death.png";
+      
+        const enemyWalkImg = new Image();
+        enemyWalkImg.src = "Spritesheets/ogre-walk.png";
+
+        const enemyAttackImg = new Image();
+        enemyAttackImg.src = "Spritesheets/ogre-attack.png";
+
+        // ==========================================
+        // --- LEVEL DESIGN & PLATFORMS ---
+        // ==========================================
+        const platforms = [
+            { x: 0, y: 289, width: WORLD_WIDTH, height: 20 },
+        ];
+
+        // ==========================================
+        // --- PLAYER ---
+        // ==========================================
+        let player = {
+            x: 100,
+            y: 180,
+            width: 105,
+            height: 120,
+            vx: 0,
+            vy: 0,
+            speed: 3.5,
+            jumpPower: -8.7,
+            gravity: 0.5,
+            isGrounded: false,
+            facing: 1,          
+            state: "idle",      
+            frameX: 0,
+            frameTimer: 0,
+            attackTimer: 0,     
+            frameCounts: {
+                idle: 6,
+                run: 8,
+                jump: 2,
+                fall: 2,
+                attack1: 8,
+                attack2: 8,
+                hit: 4,
+                death: 7
+            }
+        };
+
+        // ==========================================
+        // --- ENEMIES ---
+        // ==========================================
+        let enemies = [];
+
+        function spawnEnemy(customConfig = {}) {
+            if (isGameOver || isInventoryOpen) return;
+            
+            let spawnX = camera.x + (canvas.width / camera.zoom) + 100;
+            if (spawnX > WORLD_WIDTH - 100) spawnX = camera.x - 100;
+
+            enemies.push({
+                x: Math.min(WORLD_WIDTH - 100, Math.max(50, spawnX)),
+                y: 200, 
+                width: 70,
+                height: 89,
+                renderOffsetY: -30, 
+                hp: 60,
+                maxHp: 60,
+                speed: 1.5,
+                attackRange: 40,
+                showHealthTimer: 0,
+                vx: 0,
+                vy: 0,
+                jumpPower: -15.5,
+                isGrounded: false,
+                facing: -1,
+                state: "walk", 
+                frameX: 0,
+                frameTimer: 0,
+                walkFrames: 6,
+                attackFrames: 7,
+                ...customConfig
+            });
+        }
+
+        setInterval(spawnEnemy, 5000);
+
+        function resetGame() {
+            money = 0;
+            hp = 100;
+            isGameOver = false;
+            hitCooldown = 0;
+            player.x = 100;
+            player.y = 180;
+            player.vx = 0;
+            player.vy = 0;
+            player.isGrounded = false;
+            enemies = [];
+            droppedCoins = [];
+            projectiles = [];
+            floatingTexts = [];
+            updateUI();
+        }
+
+        canvas.addEventListener("click", () => { if (isGameOver) resetGame(); });
+        canvas.addEventListener("touchstart", (e) => { if (isGameOver) { e.preventDefault(); resetGame(); } }, { passive: false });
+
+        let keys = { left: false, right: false, jump: false };
+
+        function setupButton(id, action) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener("touchstart", (e) => { e.preventDefault(); action(true); }, {passive: false});
+            btn.addEventListener("touchend", (e) => { e.preventDefault(); action(false); }, {passive: false});
+            btn.addEventListener("mousedown", () => action(true));
+            btn.addEventListener("mouseup", () => action(false));
+        }
+
+        setupButton("leftBtn", (val) => { keys.left = val; if(val) player.facing = -1; });
+        setupButton("rightBtn", (val) => { keys.right = val; if(val) player.facing = 1; });
+        setupButton("jumpBtn", (val) => {
+            if (val && player.isGrounded && !isGameOver && !isInventoryOpen) {
+                player.vy = player.jumpPower;
+                player.isGrounded = false;
+                SoundManager.playJump();
+            }
+        });
+
+        // Helper function to cast fire spell
+function castFireSpell() {
+    if (!isGameOver && !isInventoryOpen && player.attackTimer <= 0) {
+        SoundManager.playFire();
+        player.state = "attack2";
+        player.frameX = 0;
+        player.attackTimer = 18;
+
+        projectiles.push({
+            type: "fire",
+            x: player.facing > 0 ? player.x + player.width - 20 : player.x - 30,
+            y: player.y + player.height / 2 - 32,
+            width: 86,
+            height: 54,
+            vx: player.facing * 5.5,
+            vy: 0,
+            damage: 25,
+            facing: player.facing,
+            life: 140,
+            frameX: 0,
+            frameTimer: 0,
+            totalFrames: FIRE_SPELL_FRAMES
+        });
+    }
+}
+
+// Helper function to cast ice spell
+function castIceSpell() {
+    if (!isGameOver && !isInventoryOpen && player.attackTimer <= 0) {
+        SoundManager.playIce();
+        player.state = "attack2";
+        player.frameX = 0;
+        player.attackTimer = 18;
+
+        projectiles.push({
+            type: "ice",
+            x: player.facing > 0 ? player.x + player.width - 20 : player.x - 30,
+            y: player.y + player.height / 2 - 32,
+            width: 86,
+            height: 54,
+            vx: player.facing * 6.0,
+            vy: 0,
+            damage: 30,
+            facing: player.facing,
+            life: 140,
+            frameX: 0,
+            frameTimer: 0,
+            totalFrames: ICE_SPELL_FRAMES
+        });
+    }
+}
+
+            // Fire Skill Button
+            setupButton("fireBtn", (val) => { if (val) castFireSpell(); });
+            
+            // Ice Skill Button
+            setupButton("iceBtn", (val) => { if (val) castIceSpell(); });
+            
+            // Main Default Attack Button (⚔️) now triggers Fire Spell attack as default!
+            setupButton("attackBtn", (val) => { if (val) castFireSpell(); });
+      
+        // ==========================================
+        // --- UPDATE LOGIC ---
+        // ==========================================
+        function updateCamera() {
+            let viewWidth = canvas.width / camera.zoom;
+            let viewHeight = canvas.height / camera.zoom;
+
+            let targetX = player.x + player.width / 2 - viewWidth / 2;
+            let targetY = player.y + player.height / 2 - viewHeight / 2;
+
+            targetX = Math.max(0, Math.min(WORLD_WIDTH - viewWidth, targetX));
+            targetY = Math.max(-100, Math.min(WORLD_HEIGHT - viewHeight, targetY));
+
+            camera.x += (targetX - camera.x) * camera.smoothing;
+            camera.y += (targetY - camera.y) * camera.smoothing;
+        }
+
+        function update() {
+            if (isGameOver || isInventoryOpen) return;
+
+            player.vx = 0;
+            if (keys.left) { player.vx = -player.speed; player.x += player.vx; }
+            if (keys.right) { player.vx = player.speed; player.x += player.vx; }
+
+            player.vy += player.gravity;
+            player.y += player.vy;
+            
+            let onAnyPlatform = false;
+
+            for (let p of platforms) {
+                let playerBottom = player.y + player.height;
+                let prevPlayerBottom = playerBottom - player.vy;
+
+                if (
+                    player.x + player.width > p.x &&
+                    player.x < p.x + p.width &&
+                    playerBottom >= p.y &&
+                    prevPlayerBottom <= p.y + 25 &&
+                    player.vy >= 0 
+                ) {
+                    player.y = p.y - player.height;
+                    player.vy = 0;
+                    player.isGrounded = true;
+                    onAnyPlatform = true;
+                }
+            }
+
+            if (!onAnyPlatform) player.isGrounded = false;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x > WORLD_WIDTH - player.width) player.x = WORLD_WIDTH - player.width;
+
+            if (player.y > WORLD_HEIGHT + 100) {
+                hp = 0;
+                updateUI();
+                isGameOver = true;
+            }
+
+            if (hitCooldown > 0) hitCooldown--;
+            if (player.attackTimer > 0) player.attackTimer--;
+
+            if (player.attackTimer > 0) {
+                // Keep attacking state
+            } else if (!player.isGrounded) {
+                player.state = player.vy < 0 ? "jump" : "fall";
+            } else if (Math.abs(player.vx) > 0.1) {
+                player.state = "run";
+                stepTimer++;
+                if (stepTimer % 18 === 0) {
+                    SoundManager.playStep();
+                }
+            } else {
+                player.state = "idle";
+                stepTimer = 0;
+            }
+
+            updateCamera();
+
+            // Projectile Physics, Animation & Collisions
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let proj = projectiles[i];
+                proj.x += proj.vx;
+                proj.life--;
+
+                // Animate projectile spritesheet frames
+                proj.frameTimer++;
+                if (proj.frameTimer % 5 === 0) {
+                    proj.frameX = (proj.frameX + 1) % (proj.totalFrames || 1);
+                }
+
+                if (proj.life <= 0 || proj.x < 0 || proj.x > WORLD_WIDTH) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                let hitEnemy = false;
+                for (let j = enemies.length - 1; j >= 0; j--) {
+                    let e = enemies[j];
+                    if (
+                        proj.x + proj.width > e.x &&
+                        proj.x < e.x + e.width &&
+                        proj.y + proj.height > e.y &&
+                        proj.y < e.y + e.height
+                    ) {
+                        hitEnemy = true;
+                        e.hp -= proj.damage;
+                        e.vx = proj.facing * 4;
+                        e.showHealthTimer = 120;
+
+                        if (proj.type === "fire") {
+                            SoundManager.playFire();
+                        } else {
+                            SoundManager.playIce();
+                        }
+
+                        floatingTexts.push({
+                            x: e.x + e.width / 2,
+                            y: e.y - 15,
+                            text: "-" + proj.damage + (proj.type === "fire" ? " 🔥" : " ❄️"),
+                            color: proj.type === "fire" ? "#ff7733" : "#66ccff",
+                            alpha: 1.0,
+                            vy: -1.2
+                        });
+
+                        if (e.hp <= 0) {
+                            let coinValue = Math.floor(Math.random() * 11) + 10;
+                            let enemyRenderY = e.y + (e.renderOffsetY || 0);
+
+                            droppedCoins.push({
+                                x: e.x + e.width / 2 - 10,
+                                y: enemyRenderY + e.height - 25,
+                                width: 20,
+                                height: 20,
+                                value: coinValue,
+                                vy: -3.5,
+                                vx: (Math.random() - 0.5) * 3,
+                                isGrounded: false,
+                                frameX: 0,
+                                frameTimer: 0
+                            });
+                      
+                            enemies.splice(j, 1);
+                            updateUI();
+                        }
+                        break;
+                    }
+                }
+
+                if (hitEnemy) {
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                let ft = floatingTexts[i];
+                ft.y += ft.vy;
+                ft.alpha -= 0.02;
+                if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+            }
+
+            // Coin Physics, Spinning Animation & Pickup
+            for (let i = droppedCoins.length - 1; i >= 0; i--) {
+                let c = droppedCoins[i];
+            
+                c.x += c.vx;
+                c.vy += player.gravity;
+                c.y += c.vy;
+            
+                c.isGrounded = false;
+                for (let p of platforms) {
+                    let visualGround = p.y - 34;
+            
+                    if (
+                        c.x + c.width > p.x &&
+                        c.x < p.x + p.width &&
+                        c.y + c.height >= visualGround &&
+                        c.y + c.height - c.vy <= visualGround + 18 &&
+                        c.vy >= 0
+                    ) {
+                        c.y = visualGround - c.height;
+                        c.vy = 0;
+                        c.vx *= 0.8;
+                        c.isGrounded = true;
+                    }
+                }
+
+                c.frameTimer++;
+                if (c.frameTimer % 6 === 0) {
+                    c.frameX = (c.frameX + 1) % COIN_TOTAL_FRAMES;
+                }
+
+                let distanceX = (player.x + player.width / 2) - (c.x + c.width / 2);
+                let distanceY = (player.y + player.height / 2) - (c.y + c.height / 2);
+                let distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                if (distance < 45) {
+                    money += c.value;
+
+                    floatingTexts.push({
+                        x: c.x + c.width / 2,
+                        y: c.y - 10,
+                        text: "+" + c.value + " 🪙",
+                        color: "#ffd700",
+                        alpha: 1.0,
+                        vy: -1.2
+                    });
+
+                    droppedCoins.splice(i, 1);
+                    updateUI();
+                }
+            }
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+
+                let dxPlayer = (player.x + player.width / 2) - (e.x + e.width / 2);
+                let dyPlayer = (player.y + player.height / 2) - (e.y + e.height / 2);
+
+                e.facing = dxPlayer > 0 ? 1 : -1;
+
+                if (Math.abs(dxPlayer) < e.attackRange && Math.abs(dyPlayer) < e.attackRange) {
+                    if (e.state !== "attack") {
+                        e.state = "attack";
+                        e.frameX = 0;
+                    }
+                    e.vx = 0;
+                } else {
+                    if (e.state !== "walk") {
+                        e.state = "walk";
+                        e.frameX = 0;
+                    }
+                    e.vx = e.facing * e.speed;
+                    e.x += e.vx;
+                }
+
+                e.vy += player.gravity;
+                e.y += e.vy;
+                e.isGrounded = false;
+
+                if (e.showHealthTimer > 0) e.showHealthTimer--;
+
+                e.frameTimer++;
+                let totalFrames = (e.state === "attack") ? e.attackFrames : e.walkFrames;
+                let animSpeed = (e.state === "attack") ? 8 : 10;
+
+                if (e.frameTimer % animSpeed === 0) {
+                    e.frameX = (e.frameX + 1) % totalFrames;
+                }
+
+                for (let p of platforms) {
+                    if (
+                        e.x + e.width > p.x &&
+                        e.x < p.x + p.width &&
+                        e.y + e.height >= p.y &&
+                        e.y + e.height - e.vy <= p.y + 18
+                    ) {
+                        e.y = p.y - e.height;
+                        e.vy = 0;
+                        e.isGrounded = true;
+                    }
+                }
+
+                if (e.x < 0) e.x = 0;
+                else if (e.x > WORLD_WIDTH - e.width) e.x = WORLD_WIDTH - e.width;
+
+                if (e.y > WORLD_HEIGHT + 50) {
+                    enemies.splice(i, 1);
+                    continue;
+                }
+
+                let isTouching = false;
+                if (e.state === "attack" && (e.frameX === 3 || e.frameX === 4)) {
+                    let attackReach = 35; 
+                    let attackLeft = e.facing === 1 ? e.x : e.x - attackReach;
+                    let attackRight = e.facing === 1 ? e.x + e.width + attackReach : e.x + e.width;
+                    
+                    if (
+                        player.x + player.width > attackLeft &&
+                        player.x < attackRight &&
+                        player.y + player.height > e.y &&
+                        player.y < e.y + e.height
+                    ) {
+                        isTouching = true;
+                    }
+                } 
+
+                if (isTouching && hitCooldown === 0) {
+                    SoundManager.playHit();
+                    let damageVal = 2;
+                    hp -= damageVal;
+                    hitCooldown = 40;
+                    player.state = "hit";
+
+                    floatingTexts.push({
+                        x: player.x + player.width / 2,
+                        y: player.y - 15,
+                        text: "-" + damageVal,
+                        color: "#ffcc00",
+                        alpha: 1.0,
+                        vy: -1.2
+                    });
+
+                    if (hp < 0) hp = 0;
+                    updateUI();
+                    if (hp === 0) isGameOver = true;
+                }
+            }
+
+            debugEl.innerHTML = `
+                X: ${Math.round(player.x)} | Y: ${Math.round(player.y)}<br>
+                Grounded: ${player.isGrounded} | State: ${player.state}<br>
+                Enemies: ${enemies.length} | Spells: ${projectiles.length}
+            `;
+          }
+
+          // ==========================================
+        // --- DRAW LOGIC ---
+        // ==========================================
+        function drawBackground() {
+            let tileWidth = canvas.width;
+            for (let x = 0; x < WORLD_WIDTH; x += tileWidth) {
+                ctx.drawImage(bgImg, x, 0, tileWidth + 1, canvas.height);
+            }
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+            ctx.scale(player.facing, 1);
+
+            let currentSheet = playerAssets[player.state] || playerAssets.idle;
+
+            if (!currentSheet.complete || currentSheet.naturalWidth === 0) {
+                ctx.fillStyle = "#3498db";
+                ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+                ctx.restore();
+                return;
+            }
+
+            let totalFrames = player.frameCounts[player.state] || 1;
+            let frameWidth = currentSheet.width / totalFrames || player.width;
+            let frameHeight = currentSheet.height;
+
+            if (!isInventoryOpen) {
+                player.frameTimer++;
+                if (player.frameTimer > 6) {
+                    player.frameX = (player.frameX + 1) % totalFrames;
+                    player.frameTimer = 0;
+                }
+            }
+
+            if (player.frameX >= totalFrames) player.frameX = 0;
+
+            ctx.drawImage(
+                currentSheet,
+                player.frameX * frameWidth, 0, frameWidth, frameHeight,
+                -player.width / 2, -player.height / 2, player.width, player.height
+            );
+
+            ctx.restore();
+        }
+
+        function drawProjectiles() {
+    ctx.imageSmoothingEnabled = false;
+
+    for (let proj of projectiles) {
+        ctx.save();
+        ctx.translate(proj.x + proj.width / 2, proj.y + proj.height / 2);
+        ctx.scale(proj.facing, 1);
+
+        let img = proj.type === "fire" ? fireSpellImg : iceSpellImg;
+        let totalFrames = proj.totalFrames || 1;
+
+        if (img.complete && img.naturalWidth > 0) {
+            let frameWidth = img.width / totalFrames;
+
+            // Crop settings to eliminate top/bottom empty padding
+            let cropY = 0;
+            let cropHeight = img.height;
+
+            if (proj.type === "fire") {
+                cropY = img.height * 0.30;      // Skips top empty padding
+                cropHeight = img.height * 0.40; // Captures only the fire graphic
+            } else if (proj.type === "ice") {
+                cropY = img.height * 0.35;      // Skips top empty padding
+                cropHeight = img.height * 0.35; // Captures only the ice graphic
+            }
+
+            ctx.drawImage(
+                img,
+                (proj.frameX % totalFrames) * frameWidth, cropY, // Source position
+                frameWidth, cropHeight,                         // Source size (cropped)
+                -proj.width / 2, -proj.height / 2,               // Canvas position
+                proj.width, proj.height                          // Rendered display size
+            );
+        } else {
+            ctx.fillStyle = proj.type === "fire" ? "#ff4500" : "#00ffff";
+            ctx.beginPath();
+            ctx.ellipse(0, 0, proj.width / 2, proj.height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+  }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.scale(camera.zoom, camera.zoom);
+            ctx.translate(-camera.x, -camera.y);
+
+            drawBackground();
+            drawPlayer();
+            drawProjectiles();
+
+            for (let c of droppedCoins) {
+                if (coinImg.complete && coinImg.naturalWidth > 0) {
+                    let frameWidth = coinImg.width / COIN_TOTAL_FRAMES;
+                    let frameHeight = coinImg.height;
+
+                    ctx.drawImage(
+                        coinImg,
+                        c.frameX * frameWidth, 0, frameWidth, frameHeight, 
+                        c.x, c.y, c.width, c.height                         
+                    );
+                } else {
+                    ctx.fillStyle = "#ffd700";
+                    ctx.beginPath();
+                    ctx.arc(c.x + c.width / 2, c.y + c.height / 2, c.width / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let e of enemies) {
+                let currentImg = (e.state === "attack") ? enemyAttackImg : enemyWalkImg;
+                
+                if (!currentImg.complete || currentImg.naturalWidth === 0) {
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.fillRect(e.x, e.y, e.width, e.height);
+                    continue;
+                }
+
+                let totalFrames = (e.state === "attack") ? e.attackFrames : e.walkFrames;
+                let frameWidth = currentImg.width / totalFrames;
+                let frameHeight = currentImg.height;
+
+                let renderY = e.y + (e.renderOffsetY || 0);
+
+                ctx.save();
+                if (e.facing === 1) {
+                    ctx.scale(-1, 1);
+                    ctx.drawImage(
+                        currentImg,
+                        e.frameX * frameWidth, 0, frameWidth, frameHeight,
+                        -e.x - e.width, renderY, e.width, e.height
+                    );
+                } else {
+                    ctx.drawImage(
+                        currentImg,
+                        e.frameX * frameWidth, 0, frameWidth, frameHeight,
+                        e.x, renderY, e.width, e.height
+                    );
+                }
+                ctx.restore();
+
+                if (e.showHealthTimer > 0) {
+                    ctx.fillStyle = "#333";
+                    ctx.fillRect(e.x, renderY - 12, e.width, 5);
+                    ctx.fillStyle = "#ff4d4d";
+                    ctx.fillRect(e.x, renderY - 12, e.width * (e.hp / e.maxHp), 5);
+                }
+            }
+
+            for (let ft of floatingTexts) {
+                ctx.save();
+                ctx.globalAlpha = ft.alpha;
+                ctx.fillStyle = ft.color;
+                ctx.font = "bold 16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
+            }
+
+            ctx.restore();
+
+            if (isGameOver) {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "#ff4d4d";
+                ctx.font = "bold 32px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("YOU DIED", canvas.width / 2, canvas.height / 2 - 15);
+
+                ctx.fillStyle = "#fff";
+                ctx.font = "14px sans-serif";
+                ctx.fillText("Tap anywhere to restart", canvas.width / 2, canvas.height / 2 + 20);
+            }
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
